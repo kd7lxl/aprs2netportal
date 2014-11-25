@@ -1,5 +1,5 @@
 ;
-; This file lists the Tier 2 servers with their main client port 14580
+; This file lists the Tier2 servers with their main client port 14580
 ;
 ;
 ; The status pages of all servers are accessible on port 14501.
@@ -10,11 +10,11 @@
 ; comments. You can simply close it without further action.
 ;
 ; For further information concerning the filter guide, IPV6 connects, server list
-; updates or connection problems, please refer to the Tier 2 Network Wiki at:
+; updates or connection problems, please refer to the Tier2 Network Wiki at:
 ;
 ;                         http://www.aprs2.net/wiki/
 ;
-; Please use the regional Tier 2 DNS addresses as described in the Wiki.
+; Please use the regional Tier2 DNS addresses as described in the Wiki.
 ;
 {% for rotate in rotates %}{{ rotate.fqdn }}:14580;{{ rotate.description }}
 {% endfor %};
