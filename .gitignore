@@ -1,4 +1,6 @@
 *.pyc
-django-ssl-client-auth
-django_ssl_auth
-static
+__pycache__
+.env
+db.sqlite3
+staticfiles
+keys

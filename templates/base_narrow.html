@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% comment %}
+  Centered narrow card without the sidebar, for the login and password
+  reset pages. Child templates fill the "content" block.
+{% endcomment %}
+{% block page %}
+    <main class="portal-narrow" id="content">
+      {% include "includes/messages.html" %}
+      <div class="card">
+        <div class="card-body">
+{% block content %}{% endblock %}
+        </div>
+      </div>
+    </main>
+{% endblock %}

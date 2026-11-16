@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The image is the test environment: the dependencies are the Ubuntu
+      # packages installed in it. Building it also runs collectstatic, which
+      # fails on a broken static file reference.
+      - name: Build the application image
+        run: docker build --pull -t t2sysop-web .
+
+      - name: Check that migrations are up to date
+        run: >
+          docker run --rm -e SECRET_KEY=ci t2sysop-web
+          python3 manage.py makemigrations --check --dry-run
+
+      - name: Run the tests
+        run: >
+          docker run --rm -e SECRET_KEY=ci t2sysop-web
+          python3 -W error::DeprecationWarning manage.py test
+
+      - name: Django deployment checks
+        run: >
+          docker run --rm -e SECRET_KEY=ci-only-0123456789-abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJ
+          -e ALLOWED_HOSTS=example.org -e BEHIND_TLS_PROXY=1 t2sysop-web
+          python3 manage.py check --deploy --fail-level WARNING
+
+      - name: Build the PostgreSQL and pghoard image
+        run: docker build --pull -t t2sysop-postgres docker/postgres
+
+      - name: Validate the compose file
+        run: >
+          SECRET_KEY=ci POSTGRES_PASSWORD=ci
+          docker compose --profile backup config --quiet

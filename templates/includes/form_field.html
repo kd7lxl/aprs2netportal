@@ -1,0 +1,23 @@
+{% load bs_widget is_checkbox from bootstrap %}
+{% comment %}
+  Renders one form field with its label, errors and help text.
+  Pass horizontal=True for a label column beside the field.
+{% endcomment %}
+<div class="mb-3{% if horizontal %} row{% endif %}">
+  <label class="{% if horizontal %}col-sm-4 col-lg-3 col-form-label{% else %}form-label{% endif %}" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  <div{% if horizontal %} class="col-sm-8 col-lg-9"{% endif %}>
+    {% if field|is_checkbox %}
+    <div class="form-check portal-check">{{ field|bs_widget }}</div>
+    {% else %}
+    {{ field|bs_widget }}
+    {% endif %}
+    {% if field.errors %}
+    <div class="invalid-feedback d-block" id="{{ field.auto_id }}_error">
+      {% for error in field.errors %}{{ error }} {% endfor %}
+    </div>
+    {% endif %}
+    {% if field.help_text %}
+    <div class="form-text" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>
+    {% endif %}
+  </div>
+</div>

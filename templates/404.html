@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Not Found{% endblock %}
+
+{% block content %}
+        <h1>404 Not Found</h1>
+        <p>There is nothing at this address.</p>
+        <p><a href="{% url 'own_servers' %}">Back to your servers</a></p>
+{% endblock %}

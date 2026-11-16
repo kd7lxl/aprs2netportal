@@ -1,57 +1,42 @@
 {% extends "base.html" %}
-{% load addcss from addcss %}
+
+{% block title %}{{ server }}{% endblock %}
+
 {% block content %}
+        <h1>{% if can_edit %}Edit {% endif %}{{ server }}</h1>
 
-<h1 class="page-header">{% if can_edit %}Edit {% endif %}{{ server }}</h1>
-
-<style>
-input[type="checkbox"].form-control {
-    width: auto;
-}
-</style>
-
-<form class="form-horizontal" method="post">
-{% csrf_token %}
-{% if form.non_field_errors %}
-<div class="alert alert-danger">{{ form.non_field_errors }}</div>
-{% endif %}
-{% for field in form %}
-    {% if field.errors %}
-        <div class="form-group has-error has-feedback">
-            <label class="col-sm-2 control-label" for="{{ field.auto_id }}">{{ field.label }}</label>
-            <div class="col-sm-10">{{ field|addcss:"form-control" }}
-                <span class="glyphicon glyphicon-remove form-control-feedback"></span>
-                <p class="help-inline"><small>
-                    <span class="text-danger">{% for error in field.errors %}{{ error }}{% endfor %}</span>
-                    {{ field.help_text }}
-                </small></p>
-            </div>
-        </div>
-    {% else %}
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="{{ field.auto_id }}">{{ field.label }}</label>
-            <div class="col-sm-10">{{ field|addcss:"form-control" }}
-                {% if field.help_text %}
-                    <p class="help-inline"><small>{{ field.help_text }}</small></p>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
-{% endfor %}
 {% if can_edit %}
-<div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-        <button type="submit" class="btn btn-primary" >Submit</button>
-    </div>
-</div>
+        <form class="portal-form" method="post">
+          {% csrf_token %}
+          {% include "includes/form_errors.html" %}
+          {% for field in form %}
+          {% include "includes/form_field.html" with horizontal=True %}
+          {% endfor %}
+          <div class="row">
+            <div class="col-sm-8 offset-sm-4 col-lg-9 offset-lg-3">
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+          </div>
+        </form>
+{% else %}
+        <p class="text-body-secondary">This record is read-only: only the owner
+        and the authorized sysops of a server can change it.</p>
+        <div class="portal-form">
+          <fieldset disabled>
+            <legend class="visually-hidden">Server details</legend>
+            {% for field in form %}
+            {% include "includes/form_field.html" with horizontal=True %}
+            {% endfor %}
+          </fieldset>
+        </div>
 {% endif %}
-</form>
 
-<h2 class="sub-header">{{ server }} Rotate Eligibility</h2>
-<ul>
+        <h2>{{ server }} Rotate Eligibility</h2>
+        <ul>
 {% for rotate in server.rotate_set.all %}
-    <li>{{ rotate }}</li>
+          <li>{{ rotate }}</li>
+{% empty %}
+          <li class="text-body-secondary">Not in any rotate.</li>
 {% endfor %}
-</ul>
-
+        </ul>
 {% endblock %}

@@ -1,20 +1,26 @@
 {% extends "base.html" %}
 {% load servertable from sysop %}
-{% block content %}
 
+{% block title %}Servers{% endblock %}
+
+{% block content %}
+        <h1 class="visually-hidden">Servers</h1>
 {% if own_servers %}
-    <h2 class="sub-header">Your servers</h2>
-    {% servertable own_servers %}
+        <h2>Your servers</h2>
+        {% servertable own_servers %}
 {% endif %}
 
 {% if authorized_servers %}
-    <h2 class="sub-header">Your other authorized servers</h2>
-    {% servertable authorized_servers %}
+        <h2>Your other authorized servers</h2>
+        {% servertable authorized_servers %}
 {% endif %}
 
 {% if all_servers %}
-    <h2 class="sub-header">All servers</h2>
-    {% servertable all_servers %}
+        <h2>All servers</h2>
+        {% servertable all_servers %}
 {% endif %}
 
+{% if not own_servers and not authorized_servers and not all_servers %}
+        <p class="text-body-secondary">No servers to show.</p>
+{% endif %}
 {% endblock %}

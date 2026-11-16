@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Server Error</title>
+    <link rel="stylesheet" href="{% static "vendor/bootstrap/bootstrap.min.css" %}">
+    <link rel="stylesheet" href="{% static "portal.css" %}">
+    <link rel="icon" type="image/x-icon" href="{% static "favicon.ico" %}">
+    <script src="{% static "portal.js" %}"></script>
+  </head>
+  <body>
+    <header class="navbar sticky-top bg-dark portal-navbar" data-bs-theme="dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">APRS-IS Tier2 Sysop Portal</a>
+      </div>
+    </header>
+    <main class="portal-narrow" id="content">
+      <h1>500 Server Error</h1>
+      <p>Something went wrong on the server. The administrators have been
+      notified. Please try again in a moment.</p>
+    </main>
+  </body>
+</html>

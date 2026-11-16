@@ -1,54 +1,35 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
-from models import Server
+from .models import Server
+
+User = get_user_model()
 
 
-class ServerForm(forms.ModelForm):
+class SysopServerForm(forms.ModelForm):
+    """Allows sysops to edit their server details. Some fields are readonly."""
+
+    # Only administrators may change these, through the admin site.
+    ADMIN_ONLY_FIELDS = ('server_id', 'hostname', 'domain')
+
     class Meta:
         model = Server
-        # fields = '__all__'  # needed in future version of Django
+        fields = '__all__'
 
-
-class SysopServerForm(ServerForm):
-    """Allows sysops to edit their server details. Some fields are readonly."""
     def __init__(self, *args, **kwargs):
-        super(SysopServerForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-        instance = getattr(self, 'instance', None)
-        if instance and instance.pk:
-            self.fields['server_id'].widget.attrs['disabled'] = 'disabled'
-            self.fields['server_id'].required = False
-            self.fields['hostname'].widget.attrs['disabled'] = 'disabled'
-            self.fields['hostname'].required = False
-            self.fields['domain'].widget.attrs['disabled'] = 'disabled'
-            self.fields['domain'].required = False
+        if self.instance and self.instance.pk:
+            for name in self.ADMIN_ONLY_FIELDS:
+                # A disabled field ignores submitted data and keeps the
+                # instance's value.
+                self.fields[name].disabled = True
+                self.fields[name].required = False
 
         self.fields['authorized_sysops'].widget.attrs['size'] = "10"
         user_qs = User.objects.order_by('username')
         self.fields['authorized_sysops'].queryset = user_qs
         self.fields['owner'].queryset = user_qs
-
-    def clean_server_id(self):
-        instance = getattr(self, 'instance', None)
-        if instance and instance.pk:
-            return instance.server_id
-        else:
-            return self.cleaned_data['server_id']
-
-    def clean_hostname(self):
-        instance = getattr(self, 'instance', None)
-        if instance and instance.pk:
-            return instance.hostname
-        else:
-            return self.cleaned_data['hostname']
-
-    def clean_domain(self):
-        instance = getattr(self, 'instance', None)
-        if instance and instance.pk:
-            return instance.domain
-        else:
-            return self.cleaned_data['domain']
 
 
 class UserForm(forms.ModelForm):

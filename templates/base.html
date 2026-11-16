@@ -1,249 +1,100 @@
-{% load staticfiles %}
+{% load static %}
 {% load active from navigation %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#222222">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#212529">
     <title>{% block title %}APRS-IS Tier2 Sysop Portal{% endblock %}</title>
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{% static "dashboard.css" %}">
-    <link rel="shortcut icon" type="image/x-icon" href="{% static "favicon.ico" %}">
-    <link rel="icon" type="image/vnd.microsoft.icon" href="{% static "favicon.ico" %}" sizes="16x16 24x24 32x32 64x64">
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
+    <link rel="stylesheet" href="{% static "vendor/bootstrap/bootstrap.min.css" %}">
+    <link rel="stylesheet" href="{% static "portal.css" %}">
+    <link rel="icon" type="image/x-icon" href="{% static "favicon.ico" %}" sizes="16x16 24x24 32x32 64x64">
+    <script src="{% static "portal.js" %}"></script>
+    <script src="{% static "vendor/bootstrap/bootstrap.bundle.min.js" %}" defer></script>
   </head>
   <body>
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">APRS-IS Tier2 Sysop Portal</a>
-        </div>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
+    <a class="visually-hidden-focusable portal-skip" href="#content">Skip to main content</a>
+
+    <header class="navbar navbar-expand-md sticky-top bg-dark portal-navbar" data-bs-theme="dark">
+      <nav class="container-fluid" aria-label="Account">
+        <a class="navbar-brand" href="{% url 'own_servers' %}">APRS-IS Tier2 Sysop Portal</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#portal-account-nav" aria-controls="portal-account-nav" aria-expanded="false" aria-label="Toggle account menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="portal-account-nav">
+          <ul class="navbar-nav ms-auto">
 {% if request.user.is_authenticated %}
-            <li><a href="{% url 'sysop.views.user_detail' %}">Welcome, {{ request.user }}!</a></li>
-            <li><a href="{% url 'django.contrib.auth.views.password_change' %}">Change Password</a></li>
+            {% active 'user_detail' as profile_active %}
+            {% active 'password_change' as password_active %}
+            <li class="nav-item">
+              <a class="nav-link{% if profile_active %} active{% endif %}"{% if profile_active %} aria-current="page"{% endif %} href="{% url 'user_detail' %}">Welcome, {{ request.user }}!</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if password_active %} active{% endif %}"{% if password_active %} aria-current="page"{% endif %} href="{% url 'password_change' %}">Change Password</a>
+            </li>
             {% if request.user.is_staff %}
-            <li><a href="/admin/">Admin</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
+            </li>
             {% endif %}
-            <li><a href="{% url 'django.contrib.auth.views.logout_then_login' %}">Logout</a></li>
+            <li class="nav-item">
+              <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="nav-link">Logout</button>
+              </form>
+            </li>
 {% else %}
-            <li><a href="{% url 'django.contrib.auth.views.login' %}">Login</a></li>
-            <li><a href="{% url 'django.contrib.auth.views.password_reset' %}">Reset Password</a></li>
+            {% active 'login' as login_active %}
+            {% active 'password_reset' as reset_active %}
+            <li class="nav-item">
+              <a class="nav-link{% if login_active %} active{% endif %}"{% if login_active %} aria-current="page"{% endif %} href="{% url 'login' %}">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if reset_active %} active{% endif %}"{% if reset_active %} aria-current="page"{% endif %} href="{% url 'password_reset' %}">Reset Password</a>
+            </li>
 {% endif %}
           </ul>
         </div>
-      </div>
-    </div>
+      </nav>
+    </header>
 
-    <div class="container-fluid">
-      <div class="row">
 {% block page %}
-        <div class="col-sm-3 col-md-2 sidebar">
-          <ul class="nav nav-sidebar">
-            <li class="{% active 'sysop.views.all_servers' %}">
-                 <a href="{% url 'sysop.views.all_servers' %}">All Servers</a>
-            </li>
-            <li class="{% active 'sysop.views.own_servers' %}">
-                 <a href="{% url 'sysop.views.own_servers' %}">Your Servers</a>
-            </li>
-          </ul>
-          <ul class="nav nav-sidebar">
-            <li><a target="_blank" href="http://status.aprs2.net/">Status Monitor</a></li>
-            <li><a target="_blank" href="http://groups.yahoo.com/group/aprs2net">Yahoo Group</a></li>
-          </ul>
-          <ul class="nav nav-sidebar">
-            <li><a href="{% url 'sysop.views.servers_json' %}">Server List JSON</a></li>
-            <li><a href="{% url 'sysop.views.rotates_json' %}">Rotate List JSON</a></li>
-            <li><a href="{% url 'sysop.views.server_list' %}">APRServe2.txt</a></li>
-          </ul>
-        </div>
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-{% endif %}
-{% block content %}
-          <h1 class="page-header">Dashboard</h1>
-
-          <div class="row placeholders">
-            <div class="col-xs-6 col-sm-3 placeholder">
-              <img data-src="holder.js/200x200/auto/sky" class="img-responsive" alt="Generic placeholder thumbnail">
-              <h4>Label</h4>
-              <span class="text-muted">Something else</span>
-            </div>
-            <div class="col-xs-6 col-sm-3 placeholder">
-              <img data-src="holder.js/200x200/auto/vine" class="img-responsive" alt="Generic placeholder thumbnail">
-              <h4>Label</h4>
-              <span class="text-muted">Something else</span>
-            </div>
-            <div class="col-xs-6 col-sm-3 placeholder">
-              <img data-src="holder.js/200x200/auto/sky" class="img-responsive" alt="Generic placeholder thumbnail">
-              <h4>Label</h4>
-              <span class="text-muted">Something else</span>
-            </div>
-            <div class="col-xs-6 col-sm-3 placeholder">
-              <img data-src="holder.js/200x200/auto/vine" class="img-responsive" alt="Generic placeholder thumbnail">
-              <h4>Label</h4>
-              <span class="text-muted">Something else</span>
-            </div>
-          </div>
-
-          <h2 class="sub-header">Section title</h2>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Header</th>
-                  <th>Header</th>
-                  <th>Header</th>
-                  <th>Header</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1,001</td>
-                  <td>Lorem</td>
-                  <td>ipsum</td>
-                  <td>dolor</td>
-                  <td>sit</td>
-                </tr>
-                <tr>
-                  <td>1,002</td>
-                  <td>amet</td>
-                  <td>consectetur</td>
-                  <td>adipiscing</td>
-                  <td>elit</td>
-                </tr>
-                <tr>
-                  <td>1,003</td>
-                  <td>Integer</td>
-                  <td>nec</td>
-                  <td>odio</td>
-                  <td>Praesent</td>
-                </tr>
-                <tr>
-                  <td>1,003</td>
-                  <td>libero</td>
-                  <td>Sed</td>
-                  <td>cursus</td>
-                  <td>ante</td>
-                </tr>
-                <tr>
-                  <td>1,004</td>
-                  <td>dapibus</td>
-                  <td>diam</td>
-                  <td>Sed</td>
-                  <td>nisi</td>
-                </tr>
-                <tr>
-                  <td>1,005</td>
-                  <td>Nulla</td>
-                  <td>quis</td>
-                  <td>sem</td>
-                  <td>at</td>
-                </tr>
-                <tr>
-                  <td>1,006</td>
-                  <td>nibh</td>
-                  <td>elementum</td>
-                  <td>imperdiet</td>
-                  <td>Duis</td>
-                </tr>
-                <tr>
-                  <td>1,007</td>
-                  <td>sagittis</td>
-                  <td>ipsum</td>
-                  <td>Praesent</td>
-                  <td>mauris</td>
-                </tr>
-                <tr>
-                  <td>1,008</td>
-                  <td>Fusce</td>
-                  <td>nec</td>
-                  <td>tellus</td>
-                  <td>sed</td>
-                </tr>
-                <tr>
-                  <td>1,009</td>
-                  <td>augue</td>
-                  <td>semper</td>
-                  <td>porta</td>
-                  <td>Mauris</td>
-                </tr>
-                <tr>
-                  <td>1,010</td>
-                  <td>massa</td>
-                  <td>Vestibulum</td>
-                  <td>lacinia</td>
-                  <td>arcu</td>
-                </tr>
-                <tr>
-                  <td>1,011</td>
-                  <td>eget</td>
-                  <td>nulla</td>
-                  <td>Class</td>
-                  <td>aptent</td>
-                </tr>
-                <tr>
-                  <td>1,012</td>
-                  <td>taciti</td>
-                  <td>sociosqu</td>
-                  <td>ad</td>
-                  <td>litora</td>
-                </tr>
-                <tr>
-                  <td>1,013</td>
-                  <td>torquent</td>
-                  <td>per</td>
-                  <td>conubia</td>
-                  <td>nostra</td>
-                </tr>
-                <tr>
-                  <td>1,014</td>
-                  <td>per</td>
-                  <td>inceptos</td>
-                  <td>himenaeos</td>
-                  <td>Curabitur</td>
-                </tr>
-                <tr>
-                  <td>1,015</td>
-                  <td>sodales</td>
-                  <td>ligula</td>
-                  <td>in</td>
-                  <td>libero</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-{% endblock %}
-        </div>
-{% endblock %}
-      </div>
+    <div class="portal-layout">
+      <nav class="portal-sidebar" aria-label="Main">
+        {% active 'all_servers' as all_active %}
+        {% active 'own_servers' as own_active %}
+        <ul class="nav nav-pills">
+          <li class="nav-item">
+            <a class="nav-link{% if all_active %} active{% endif %}"{% if all_active %} aria-current="page"{% endif %} href="{% url 'all_servers' %}">All Servers</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link{% if own_active %} active{% endif %}"{% if own_active %} aria-current="page"{% endif %} href="{% url 'own_servers' %}">Your Servers</a>
+          </li>
+        </ul>
+        <ul class="nav nav-pills">
+          <li class="nav-item">
+            <a class="nav-link" target="_blank" rel="noopener" href="https://status.aprs2.net/">Status Monitor {% include "includes/icon_external.html" %}<span class="visually-hidden">(opens in a new window)</span></a>
+          </li>
+        </ul>
+        <ul class="nav nav-pills">
+          <li class="nav-item"><a class="nav-link" href="{% url 'servers_json' %}">Server List JSON</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'rotates_json' %}">Rotate List JSON</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'server_list' %}">APRServe2.txt</a></li>
+        </ul>
+        <a class="portal-logo" href="https://www.aprs2.net/" target="_blank" rel="noopener">
+          <img class="portal-logo-light" src="{% static "aprs2net-logo.png" %}" width="358" height="160" alt="APRS Tier 2 Network">
+          <img class="portal-logo-dark" src="{% static "aprs2net-logo-dark.png" %}" width="358" height="160" alt="APRS Tier 2 Network">
+          <span class="visually-hidden">(opens in a new window)</span>
+        </a>
+      </nav>
+      <main class="portal-main" id="content">
+        {% include "includes/messages.html" %}
+{% block content %}{% endblock %}
+      </main>
     </div>
-
-
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+{% endblock %}
   </body>
 </html>

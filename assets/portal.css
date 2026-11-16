@@ -1,0 +1,218 @@
+/*
+ * Layout for the sysop portal, on top of Bootstrap 5.3.
+ *
+ * Colours come from Bootstrap's CSS variables only, so that everything
+ * follows the light/dark colour mode set by portal.js.
+ */
+
+:root {
+  --portal-navbar-height: 3.5rem;
+  --portal-sidebar-width: 13rem;
+}
+
+/* Anchors and the skip link target must not hide under the sticky navbar. */
+html {
+  scroll-padding-top: calc(var(--portal-navbar-height) + .5rem);
+}
+
+.portal-skip {
+  position: absolute;
+  top: .5rem;
+  left: .5rem;
+  z-index: 1100;
+  padding: .5rem 1rem;
+  color: var(--bs-body-color);
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+}
+
+/*
+ * Navbar
+ */
+
+.portal-navbar {
+  min-height: var(--portal-navbar-height);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+@media (max-width: 399.98px) {
+  .portal-navbar .navbar-brand {
+    font-size: 1rem;
+  }
+}
+
+/* The logout button is a form submit button dressed up as a nav link. */
+.portal-navbar form {
+  margin: 0;
+}
+
+/*
+ * Sidebar: a wrapping strip of links above the content on narrow screens,
+ * a sticky full-height column from the md breakpoint up.
+ */
+
+.portal-sidebar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 .75rem;
+  padding: .5rem;
+  font-size: .875rem;
+  background-color: var(--bs-tertiary-bg);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.portal-sidebar .nav-link {
+  padding: .375rem .625rem;
+  color: var(--bs-body-color);
+}
+
+.portal-sidebar .nav-link:hover,
+.portal-sidebar .nav-link:focus-visible {
+  background-color: var(--bs-secondary-bg);
+}
+
+.portal-sidebar .nav-link.active,
+.portal-sidebar .nav-link.active:hover {
+  color: #fff;
+  background-color: #0b5ed7;
+}
+
+/*
+ * Network logo at the bottom of the sidebar column. Not shown in the narrow
+ * layout, where the sidebar is a strip of links. There are two renderings,
+ * with dark and with light lettering, for the two colour modes.
+ */
+.portal-logo {
+  display: none;
+}
+
+.portal-logo img {
+  width: 100%;
+  height: auto;
+}
+
+.portal-logo-dark,
+[data-bs-theme="dark"] .portal-logo-light {
+  display: none;
+}
+
+[data-bs-theme="dark"] .portal-logo-dark {
+  display: inline;
+}
+
+.portal-icon {
+  width: .75em;
+  height: .75em;
+  margin-left: .125rem;
+  vertical-align: baseline;
+}
+
+@media (min-width: 768px) {
+  .portal-layout {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .portal-sidebar {
+    position: sticky;
+    top: var(--portal-navbar-height);
+    flex: 0 0 var(--portal-sidebar-width);
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0;
+    height: calc(100vh - var(--portal-navbar-height));
+    padding: 1rem .75rem;
+    overflow-y: auto;
+    font-size: 1rem;
+    border-right: 1px solid var(--bs-border-color);
+    border-bottom: 0;
+  }
+
+  .portal-sidebar .nav {
+    flex-direction: column;
+  }
+
+  .portal-logo {
+    display: block;
+    padding-top: 1rem;
+    margin-top: auto;
+  }
+
+  .portal-sidebar .nav + .nav {
+    padding-top: .75rem;
+    margin-top: .75rem;
+    border-top: 1px solid var(--bs-border-color);
+  }
+}
+
+/*
+ * Main content
+ */
+
+.portal-main {
+  /* Lets wide tables scroll inside .table-responsive instead of
+     stretching the flex item. */
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 1rem;
+}
+
+@media (min-width: 992px) {
+  .portal-main {
+    padding: 1.5rem 2rem;
+  }
+}
+
+.portal-main h1 {
+  padding-bottom: .5rem;
+  margin-bottom: 1.25rem;
+  font-size: 1.75rem;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.portal-main h2 {
+  margin-top: 1.5rem;
+  margin-bottom: .75rem;
+  font-size: 1.375rem;
+}
+
+.portal-main h2:first-child,
+.portal-main h1 + h2 {
+  margin-top: 0;
+}
+
+/* Pages without the sidebar: login, password reset. */
+.portal-narrow {
+  max-width: 26rem;
+  padding: 0 1rem;
+  margin: 2rem auto;
+}
+
+.portal-narrow h1 {
+  margin-bottom: 1rem;
+  font-size: 1.375rem;
+}
+
+/*
+ * Forms and tables
+ */
+
+.portal-form {
+  max-width: 56rem;
+}
+
+.portal-form fieldset {
+  min-width: 0;
+}
+
+/* Line a lone checkbox up with the label in the column next to it. */
+.portal-check {
+  padding-top: calc(.375rem + 1px);
+  margin-bottom: 0;
+}
+
+.portal-servers {
+  font-size: .875rem;
+  white-space: nowrap;
+}

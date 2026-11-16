@@ -1,0 +1,167 @@
+# aprs2netportal: application, PostgreSQL and (optionally) pghoard backups.
+#
+# Configuration comes from the .env file next to this file; copy .env.example
+# and fill it in. See deploy/README.md for installation, upgrades, backups
+# and restores.
+
+name: t2sysop
+
+services:
+  db:
+    build:
+      context: docker/postgres
+      args:
+        POSTGRES_VERSION: ${POSTGRES_VERSION:-18}
+    image: t2sysop-postgres:${POSTGRES_VERSION:-18}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: portal
+      POSTGRES_USER: portal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      PGHOARD_DB_PASSWORD: ${PGHOARD_DB_PASSWORD:-}
+    command:
+      - postgres
+      # Keep WAL around so that pghoard can catch up after an outage without
+      # a gap in the archive. With the forced segment switch below, every 10
+      # minutes with changes uses up one 16 MB segment, so 4 GB is at least
+      # 42 hours of continuous activity, and in practice weeks. The space is
+      # only taken as WAL is produced.
+      - -c
+      - wal_keep_size=${POSTGRES_WAL_KEEP_SIZE:-4GB}
+      # pghoard uploads WAL one complete 16 MB segment at a time, and this
+      # database can take weeks to fill one. Force a segment switch this
+      # often when there have been changes, so that a restore from S3 loses
+      # at most this much. (archive_timeout only works with archiving on;
+      # the archive command itself has nothing to do, pghoard streams WAL.)
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=/bin/true
+      - -c
+      - archive_timeout=${POSTGRES_ARCHIVE_TIMEOUT:-600}
+    volumes:
+      # The official image keeps each major version in its own subdirectory
+      # of this volume (/var/lib/postgresql/<major>/docker).
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portal -d portal"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    shm_size: 128mb
+    # No "no-new-privileges" here or on pghoard: both start as root and switch
+    # to the postgres user with gosu. That should work with the option, but
+    # it hung under nested AppArmor in the development environment and has
+    # not been tried on a plain Docker host, and a database that does not
+    # start is a poor trade for it.
+    networks:
+      - app
+      - backup
+
+  web:
+    build: .
+    image: t2sysop-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      DEBUG: ${DEBUG:-0}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
+      BEHIND_TLS_PROXY: ${BEHIND_TLS_PROXY:-0}
+      HSTS_SECONDS: ${HSTS_SECONDS:-31536000}
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-*}
+      LOTW_CLIENT_CERT_AUTH: ${LOTW_CLIENT_CERT_AUTH:-0}
+      TIME_ZONE: ${TIME_ZONE:-UTC}
+      POSTGRES_HOST: db
+      POSTGRES_DB: portal
+      POSTGRES_USER: portal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-25}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-0}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-webmaster@localhost}
+      SERVER_EMAIL: ${SERVER_EMAIL:-}
+      ADMINS: ${ADMINS:-}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-2}
+      GUNICORN_THREADS: ${GUNICORN_THREADS:-4}
+    # Runs as an unprivileged user and needs no capabilities at all.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - app
+    # A name for the Docker host, for sending mail through a mail server
+    # running there (EMAIL_HOST=host.docker.internal).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      # Plain HTTP for the reverse proxy on the same host. Do not expose this
+      # port to the network: with LoTW login enabled, anyone who can reach it
+      # directly can log in as anyone.
+      - "${WEB_BIND:-127.0.0.1:8000}:8000"
+    healthcheck:
+      test: ["CMD", "portal-healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Continuous backups (base backups + WAL) to AWS S3.
+  # Enabled with: COMPOSE_PROFILES=backup in .env
+  pghoard:
+    profiles: ["backup"]
+    image: t2sysop-postgres:${POSTGRES_VERSION:-18}
+    restart: unless-stopped
+    entrypoint: ["pghoard-entrypoint"]
+    command: []
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      PGHOARD_DB_PASSWORD: ${PGHOARD_DB_PASSWORD:-}
+      PGHOARD_CONFIG: /var/lib/pghoard/pghoard.json
+      PGHOARD_SITE: ${PGHOARD_SITE:-t2sysop}
+      PGHOARD_STORAGE_TYPE: ${PGHOARD_STORAGE_TYPE:-s3}
+      PGHOARD_S3_BUCKET: ${PGHOARD_S3_BUCKET:-}
+      PGHOARD_S3_REGION: ${PGHOARD_S3_REGION:-}
+      PGHOARD_S3_PREFIX: ${PGHOARD_S3_PREFIX:-}
+      PGHOARD_S3_ACCESS_KEY_ID: ${PGHOARD_S3_ACCESS_KEY_ID:-}
+      PGHOARD_S3_SECRET_ACCESS_KEY: ${PGHOARD_S3_SECRET_ACCESS_KEY:-}
+      PGHOARD_S3_HOST: ${PGHOARD_S3_HOST:-}
+      PGHOARD_S3_PORT: ${PGHOARD_S3_PORT:-}
+      PGHOARD_S3_SECURE: ${PGHOARD_S3_SECURE:-}
+      PGHOARD_LOCAL_DIRECTORY: ${PGHOARD_LOCAL_DIRECTORY:-}
+      PGHOARD_BASEBACKUP_INTERVAL_HOURS: ${PGHOARD_BASEBACKUP_INTERVAL_HOURS:-24}
+      PGHOARD_BASEBACKUP_COUNT: ${PGHOARD_BASEBACKUP_COUNT:-14}
+      PGHOARD_ENCRYPTION_KEY_ID: ${PGHOARD_ENCRYPTION_KEY_ID:-}
+      PGHOARD_ENCRYPTION_PUBLIC_KEY_FILE: /keys/public.pem
+      PGHOARD_ENCRYPTION_PRIVATE_KEY_FILE: /keys/private.pem
+    # pghoard's HTTP API (port 16000) has no authentication and pghoard can
+    # write to the database's data directory. Only the database needs to
+    # reach it, so it is kept off the network the application is on.
+    networks:
+      - backup
+    volumes:
+      - pghoard:/var/lib/pghoard
+      # Same path as in the db service: when restoring, pghoard writes the
+      # base backup and the WAL files the database asks for directly here.
+      - pgdata:/var/lib/postgresql
+      - ${PGHOARD_KEY_DIR:-./keys}:/keys:ro
+
+networks:
+  # web <-> db
+  app:
+  # db <-> pghoard. Not reachable from the web container.
+  backup:
+
+volumes:
+  pgdata:
+  pghoard:

@@ -1,4 +1,4 @@
-;
+{% load oneline from sysop %}{% autoescape off %};
 ; This file lists the Tier2 servers with their main client port 14580
 ;
 ;
@@ -16,7 +16,7 @@
 ;
 ; Please use the regional Tier2 DNS addresses as described in the Wiki.
 ;
-{% for rotate in rotates %}{{ rotate.fqdn }}:14580;{{ rotate.description }}
+{% for rotate in rotates %}{{ rotate.fqdn }}:14580;{{ rotate.description|oneline }}
 {% endfor %};
-{% for server in servers %}{{ server.fqdn }}:14580;User Definable Filter Port: {{ server.server_id }} {{ server.city }} {{ server.country }}
-{% endfor %}
+{% for server in servers %}{{ server.fqdn }}:14580;User Definable Filter Port: {{ server.server_id|oneline }} {{ server.city|oneline }} {{ server.country|oneline }}
+{% endfor %}{% endautoescape %}

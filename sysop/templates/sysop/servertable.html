@@ -1,30 +1,26 @@
-    <div class="table-responsive">
-    <table class="table table-striped table-condensed">
-      <thead>
-        <tr>
-          <th>Server <span class="glyphicon glyphicon-cog" aria-hidden="true"></span></th>
-          <th>Hostname <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></th>
-          <th>Sysop <span class="glyphicon glyphicon-user" aria-hidden="true"></span></th>
-          <th>IPv4 <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></th>
-          <th>IPv6 <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></th>
-          <th>Status <span class="glyphicon glyphicon-stats" aria-hidden="true"></span></th>
-        </tr>
-      </thead>
-      <tbody>
-    {% for server in servers %}
-        <tr>
-          <td><a href="/sysop/server/{{ server.id }}/">{{ server.server_id }}</a></td>
-          <td><a href="http://{{ server.fqdn }}:14501/">{{ server.fqdn }}</a></td>
-          <td>{{ server.owner }}</td>
-          <td><a href="http://{{ server.ipv4 }}:14501/">{{ server.ipv4 }}</a></td>
-          <td>{% if server.ipv6 %}<a href="http://[{{ server.ipv6 }}]:14501/">{{ server.ipv6 }}</a>{% else %}{{ server.ipv6 }}{% endif %}</td>
-          <td>{% if server.out_of_service %}
-            <span class="btn btn-warning btn-xs">Out of service
-              <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
-            </span>
-          {% endif %}</td>
-        </tr>
-    {% endfor %}
-      </tbody>
-    </table>
-    </div>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover table-sm align-middle portal-servers">
+            <thead>
+              <tr>
+                <th scope="col">Server</th>
+                <th scope="col">Hostname</th>
+                <th scope="col">Sysop</th>
+                <th scope="col">IPv4</th>
+                <th scope="col">IPv6</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+{% for server in servers %}
+              <tr>
+                <td><a href="{% url 'server_detail' server.id %}">{{ server.server_id|default:server.hostname }}</a></td>
+                <td><a href="http://{{ server.fqdn }}:14501/">{{ server.fqdn }}</a></td>
+                <td>{{ server.owner|default_if_none:"" }}</td>
+                <td>{% if server.ipv4 %}<a href="http://{{ server.ipv4 }}:14501/">{{ server.ipv4 }}</a>{% endif %}</td>
+                <td>{% if server.ipv6 %}<a href="http://[{{ server.ipv6 }}]:14501/">{{ server.ipv6 }}</a>{% endif %}</td>
+                <td>{% if server.out_of_service %}<span class="badge text-bg-warning">Out of service</span>{% endif %}</td>
+              </tr>
+{% endfor %}
+            </tbody>
+          </table>
+        </div>
